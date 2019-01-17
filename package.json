@@ -1,0 +1,27 @@
+{
+  "name": "reqlib",
+  "version": "1.0.0",
+  "description": "A library to simplify REST API requests and to provide utilities for handling common REST API consumer scenarios ",
+  "main": "dist",
+  "scripts": {
+    "test": "echo \"Error: no test specified\" && exit 1"
+  },
+  "repository": {
+    "type": "git",
+    "url": "git+ssh://git@github.com/brozeph/reqlib.git"
+  },
+  "keywords": [
+    "https",
+    "rest",
+    "api",
+    "client",
+    "request",
+    "library"
+  ],
+  "author": "Joshua Thomas (github.com/brozeph)",
+  "license": "MIT",
+  "bugs": {
+    "url": "https://github.com/brozeph/reqlib/issues"
+  },
+  "homepage": "https://github.com/brozeph/reqlib#readme"
+}

@@ -231,9 +231,10 @@ class Request extends events.EventEmitter {
 		// ensure default values for all request options
 		options = mergeOptions(this, options);
 		options.headers = options.headers || {};
+		options.timeout = 600000;
 
 		// apply content length header
-		options.headers['Content-Length'] = Buffer.byteLength(state.data);
+		options.headers['Content-Length'] = options.headers['Content-Length'] || Buffer.byteLength(state.data);
 
 		// apply application/json header as default
 		if (!options.headers['Content-Type']) {
@@ -342,7 +343,11 @@ class Request extends events.EventEmitter {
 
 							// if a charset was specified, apply it
 							if (contentParts.length > 1) {
-								response.setEncoding(contentParts[contentParts.length - 1]);
+								try {
+									response.setEncoding(contentParts[contentParts.length - 1]);
+								} catch (ex) {
+									// TODO: handle warning...
+								}
 							}
 						}
 

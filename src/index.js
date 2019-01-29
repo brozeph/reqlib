@@ -231,7 +231,6 @@ class Request extends events.EventEmitter {
 		// ensure default values for all request options
 		options = mergeOptions(this, options);
 		options.headers = options.headers || {};
-		options.timeout = 600000;
 
 		// apply content length header
 		options.headers['Content-Length'] = options.headers['Content-Length'] || Buffer.byteLength(state.data);

@@ -49,7 +49,6 @@ const
 		'protocol', // use to determine HTTPS or HTTP
 		'query', // custom
 		'rejectUnauthorized',
-		//'rawStream', // custom
 		'socketPath',
 		'timeout'
 	];
@@ -92,9 +91,7 @@ function mergeOptions (request, options = {}) {
 		}
 	});
 
-	// determine Mime type to understand response (JSON, Stream, etc.)
-
-	// apply keep-alive
+	// TODO: apply keep-alive
 
 	// apply retry
 	result.maxRetryCount = coalesce(
@@ -438,7 +435,7 @@ class Request extends events.EventEmitter {
 			.catch(callback);
 	}
 
-	getOptions (options) {
+	getOptions (options = {}) {
 		return mergeOptions(this, options);
 	}
 
@@ -481,16 +478,50 @@ class Request extends events.EventEmitter {
 
 class Resource {
 	constructor (urlPattern, options) {
+		if (isEmpty(urlPattern)) {
+			throw new Error('urlPattern argument is required');
+		}
+
 		this.request = new Request(options);
 		this.urlParts = parseUrlPattern(urlPattern);
 	}
 
-	async retrieve (...args) {
+	async create (data, callback) {
 		let options = this.urlParts;
+
+		return await this.request.post(options, data, callback);
+	}
+
+	async delete (...args) {
+		let
+			callback = args && typeof args[args.length - 1] === 'function' ?
+				args[args.length - 1] :
+				callback,
+			options = this.urlParts;
+
 		// TODO: map values based on urlParts.parameters
 		options.query = args;
 
-		return await this.request.get(options);
+		return await this.request.delete(options, callback);
+	}
+
+	async retrieve (...args) {
+		let
+			callback = args && typeof args[args.length - 1] === 'function' ?
+				args[args.length - 1] :
+				callback,
+			options = this.urlParts;
+
+		// TODO: map values based on urlParts.parameters
+		options.query = args;
+
+		return await this.request.get(options, callback);
+	}
+
+	async update (data, callback) {
+		let options = this.urlParts;
+
+		return await this.request.put(options, data, callback);
 	}
 }
 

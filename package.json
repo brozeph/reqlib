@@ -5,11 +5,12 @@
   "main": "dist",
   "scripts": {
     "lint": "gulp lint",
+    "posttest": "nyc report --reporter=text-lcov | coveralls",
     "prepare": "gulp build",
     "prepublish": "check-node-version --npm \">=4\" || npm run prepare",
     "pretest": "gulp clean && gulp lint",
     "test": "nyc mocha ./test/src",
-    "posttest": "nyc report --reporter=text-lcov | coveralls"
+    "test-unit": "nyc mocha ./test/src"
   },
   "repository": {
     "type": "git",

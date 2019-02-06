@@ -14,9 +14,16 @@ const
 	},
 	EVENTS = {
 		error : 'error',
+		redirect : 'redirect',
 		request :'request',
 		response : 'response',
 		retry : 'retry'
+	},
+	HTTP_HEADERS = {
+		CONNECTION : 'Connection',
+		CONTENT_LENGTH : 'Content-Length',
+		CONTENT_TYPE : 'Content-Type',
+		LOCATION : 'Location'
 	},
 	// reference: https://en.wikipedia.org/wiki/List_of_HTTP_status_codes#3xx_Redirection
 	HTTP_STATUS_CODES = {
@@ -41,6 +48,7 @@ const
 		//'keepAlive', // custom
 		//'keepAliveMsecs', // custom
 		'localAddress',
+		'maxRedirectCount', // custom
 		'maxRetryCount', // custom
 		'method',
 		'path',
@@ -92,6 +100,11 @@ function mergeOptions (request, options = {}) {
 	});
 
 	// TODO: apply keep-alive
+
+	// apply redirect
+	result.maxRedirectCount = coalesce(
+		result.maxRedirectCount,
+		DEFAULTS.MAX_REDIRECT_COUNT);
 
 	// apply retry
 	result.maxRetryCount = coalesce(
@@ -233,16 +246,18 @@ class Request extends events.EventEmitter {
 		options.headers = options.headers || {};
 
 		// apply content length header
-		options.headers['Content-Length'] = options.headers['Content-Length'] || Buffer.byteLength(state.data);
+		options.headers[HTTP_HEADERS.CONTENT_LENGTH] =
+			options.headers[HTTP_HEADERS.CONTENT_LENGTH] ||
+			Buffer.byteLength(state.data);
 
 		// apply application/json header as default
-		if (!options.headers['Content-Type']) {
-			options.headers['Content-Type'] = 'application/json';
+		if (!options.headers[HTTP_HEADERS.CONTENT_TYPE] && !options.headers[HTTP_HEADERS.CONTENT_TYPE.toLowerCase()]) {
+			options.headers[HTTP_HEADERS.CONTENT_TYPE] = 'application/json';
 		}
 
 		// apply keep-alive header when specified
-		if (options.keepAlive && !options.headers['Connection']) {
-			options.headers['Connection'] = 'keep-alive';
+		if (options.keepAlive && !options.headers[HTTP_HEADERS.CONNECTION]) {
+			options.headers[HTTP_HEADERS.CONNECTION] = 'keep-alive';
 		}
 
 		executeRequest = new Promise((resolve, reject) => {
@@ -256,9 +271,12 @@ class Request extends events.EventEmitter {
 				let client = (RE_TLS_PROTOCOL.test(options.protocol) ? https : http).request(
 					options,
 					(response) => {
+
 						let
 							chunks = [],
-							contentType = response.headers['content-type'],
+							contentType = coalesce(
+								response.headers[HTTP_HEADERS.CONTENT_TYPE],
+								response.headers[HTTP_HEADERS.CONTENT_TYPE.toLowerCase()]),
 							json = RE_CONTENT_TYPE_JSON.test(contentType),
 							redirect = [
 								HTTP_STATUS_CODES.REDIRECT_CODE_PERM,
@@ -288,7 +306,7 @@ class Request extends events.EventEmitter {
 
 						// determine if a redirect has been detected
 						if (redirect) {
-							if (isEmpty(state.headers.location)) {
+							if (isEmpty(state.headers[HTTP_HEADERS.LOCATION])) {
 								let err = new Error('redirect requested with no location');
 								err.options = options;
 								err.state = state;
@@ -296,7 +314,7 @@ class Request extends events.EventEmitter {
 								return reject(err);
 							}
 
-							if (state.redirects >= DEFAULTS.MAX_REDIRECT_COUNT) {
+							if (state.redirects >= options.maxRedirectCount) {
 								let err = new Error('maximum redirect limit exceeded');
 								err.options = options;
 								err.state = state;
@@ -305,7 +323,7 @@ class Request extends events.EventEmitter {
 							}
 
 							// remap options and redirect to supplied URL
-							let redirectUrl = url.parse(state.headers.location);
+							let redirectUrl = url.parse(state.headers[HTTP_HEADERS.LOCATION]);
 							Object.assign(options, redirectUrl);
 
 							// increment number of redirects (to avoid endless looping)
@@ -355,7 +373,7 @@ class Request extends events.EventEmitter {
 						response.on('end', () => {
 							let
 								body = chunks.join(''),
-								error = state.statusCode >= DEFAULTS.HTTP_ERROR_CODE_THRESHOLD,
+								error = state.statusCode >= DEFAULTS.HTTP_ERROR_CODE_THRESHHOLD,
 								retry =
 									state.statusCode >= DEFAULTS.HTTP_ERROR_CODE_RETRY_THRESHHOLD &&
 									state.tries <= options.maxRetryCount;

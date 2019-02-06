@@ -50,6 +50,7 @@
     "gulp-eslint": "^5.0.0",
     "gulp-sourcemaps": "^2.6.4",
     "mocha": "^5.2.0",
+    "nock": "^10.0.6",
     "nyc": "^13.1.0"
   },
   "nyc": {

@@ -77,10 +77,9 @@ describe('req-lib', () => {
 					.reply(HTTP_STATUS_CODES.SUCCESS, { parsed : true });
 
 				let
+					options,
 					req = new Request(),
 					res;
-
-				let options;
 
 				req.on('request', (state) => (options = state.options));
 
@@ -105,10 +104,9 @@ describe('req-lib', () => {
 					.reply(HTTP_STATUS_CODES.SUCCESS, { parsed : true });
 
 				let
+					options,
 					req = new Request(),
 					res;
-
-				let options;
 
 				req.on('request', (state) => (options = state.options));
 
@@ -133,14 +131,12 @@ describe('req-lib', () => {
 					.reply(HTTP_STATUS_CODES.SUCCESS, { parsed : true });
 
 				let
-					req = new Request(),
-					res;
-
-				let options;
+					options,
+					req = new Request();
 
 				req.on('request', (state) => (options = state.options));
 
-				res = await req.head('https://test.api.io/v1/tests');
+				await req.head('https://test.api.io/v1/tests');
 
 				should.exist(options);
 				should.exist(options.hostname);
@@ -158,10 +154,9 @@ describe('req-lib', () => {
 					.reply(HTTP_STATUS_CODES.SUCCESS, { parsed : true });
 
 				let
+					options,
 					req = new Request(),
 					res;
-
-				let options;
 
 				req.on('request', (state) => (options = state.options));
 
@@ -186,10 +181,9 @@ describe('req-lib', () => {
 					.reply(HTTP_STATUS_CODES.SUCCESS, { parsed : true });
 
 				let
+					options,
 					req = new Request(),
 					res;
-
-				let options;
 
 				req.on('request', (state) => (options = state.options));
 
@@ -208,32 +202,36 @@ describe('req-lib', () => {
 				options.protocol.should.equal('https:');
 			});
 
-			it('PUT should properly parse string passed to request methods', async () => {
+			it('PUT should properly parse string passed to request methods', (done) => {
 				nock('https://test.api.io')
 					.put('/v1/tests')
 					.reply(HTTP_STATUS_CODES.SUCCESS, { parsed : true });
 
 				let
-					req = new Request(),
-					res;
-
-				let options;
+					options,
+					req = new Request();
 
 				req.on('request', (state) => (options = state.options));
 
-				res = await req.put('https://test.api.io/v1/tests');
+				req.put('https://test.api.io/v1/tests', (err, res) => {
+					if (err) {
+						return done(err);
+					}
 
-				should.exist(res);
-				should.exist(res.parsed);
-				res.parsed.should.equal(true);
-				should.exist(options);
-				should.exist(options.hostname);
-				should.exist(options.path);
-				should.exist(options.protocol);
+					should.exist(res);
+					should.exist(res.parsed);
+					res.parsed.should.equal(true);
+					should.exist(options);
+					should.exist(options.hostname);
+					should.exist(options.path);
+					should.exist(options.protocol);
 
-				options.hostname.should.equal('test.api.io');
-				options.path.should.equal('/v1/tests');
-				options.protocol.should.equal('https:');
+					options.hostname.should.equal('test.api.io');
+					options.path.should.equal('/v1/tests');
+					options.protocol.should.equal('https:');
+
+					return done();
+				});
 			});
 		});
 

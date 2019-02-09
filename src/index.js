@@ -474,6 +474,11 @@ class Request extends events.EventEmitter {
 
 	// delete
 	async delete (options = {}, callback) {
+		if (typeof options === 'function' && isEmpty(callback)) {
+			callback = options;
+			options = {};
+		}
+
 		options = ensureOptions(options);
 		options.method = 'DELETE';
 		return await this.call(options, callback);
@@ -481,6 +486,11 @@ class Request extends events.EventEmitter {
 
 	// get
 	async get (options = {}, callback) {
+		if (typeof options === 'function' && isEmpty(callback)) {
+			callback = options;
+			options = {};
+		}
+
 		options = ensureOptions(options);
 		options.method = 'GET';
 		return await this.call(options, callback);
@@ -488,6 +498,11 @@ class Request extends events.EventEmitter {
 
 	// head
 	async head (options = {}, callback) {
+		if (typeof options === 'function' && isEmpty(callback)) {
+			callback = options;
+			options = {};
+		}
+
 		options = ensureOptions(options);
 		options.method = 'HEAD';
 		return await this.call(options, callback);
@@ -495,6 +510,16 @@ class Request extends events.EventEmitter {
 
 	// patch
 	async patch (options = {}, data, callback) {
+		if (typeof data === 'function' && isEmpty(callback)) {
+			callback = data;
+			data = null;
+		}
+
+		if (typeof options === 'function' && isEmpty(callback)) {
+			callback = options;
+			options = {};
+		}
+
 		options = ensureOptions(options);
 		options.method = 'PATCH';
 		return await this.call(options, data, callback);
@@ -502,6 +527,16 @@ class Request extends events.EventEmitter {
 
 	// post
 	async post (options = {}, data, callback) {
+		if (typeof data === 'function' && isEmpty(callback)) {
+			callback = data;
+			data = null;
+		}
+
+		if (typeof options === 'function' && isEmpty(callback)) {
+			callback = options;
+			options = {};
+		}
+
 		options = ensureOptions(options);
 		options.method = 'POST';
 		return await this.call(options, data, callback);
@@ -509,6 +544,16 @@ class Request extends events.EventEmitter {
 
 	// put
 	async put (options = {}, data, callback) {
+		if (typeof data === 'function' && isEmpty(callback)) {
+			callback = data;
+			data = null;
+		}
+
+		if (typeof options === 'function' && isEmpty(callback)) {
+			callback = options;
+			options = {};
+		}
+
 		options = ensureOptions(options);
 		options.method = 'PUT';
 		return await this.call(options, data, callback);

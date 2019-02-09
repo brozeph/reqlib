@@ -69,6 +69,174 @@ describe('req-lib', () => {
 			});
 		});
 
+		// ensure options
+		describe('ensureOptions', () => {
+			it('DELETE should properly parse string passed to request methods', async () => {
+				nock('https://test.api.io')
+					.delete('/v1/tests')
+					.reply(HTTP_STATUS_CODES.SUCCESS, { parsed : true });
+
+				let
+					req = new Request(),
+					res;
+
+				let options;
+
+				req.on('request', (state) => (options = state.options));
+
+				res = await req.delete('https://test.api.io/v1/tests');
+
+				should.exist(res);
+				should.exist(res.parsed);
+				res.parsed.should.equal(true);
+				should.exist(options);
+				should.exist(options.hostname);
+				should.exist(options.path);
+				should.exist(options.protocol);
+
+				options.hostname.should.equal('test.api.io');
+				options.path.should.equal('/v1/tests');
+				options.protocol.should.equal('https:');
+			});
+
+			it('GET should properly parse string passed to request methods', async () => {
+				nock('https://test.api.io')
+					.get('/v1/tests')
+					.reply(HTTP_STATUS_CODES.SUCCESS, { parsed : true });
+
+				let
+					req = new Request(),
+					res;
+
+				let options;
+
+				req.on('request', (state) => (options = state.options));
+
+				res = await req.get('https://test.api.io/v1/tests');
+
+				should.exist(res);
+				should.exist(res.parsed);
+				res.parsed.should.equal(true);
+				should.exist(options);
+				should.exist(options.hostname);
+				should.exist(options.path);
+				should.exist(options.protocol);
+
+				options.hostname.should.equal('test.api.io');
+				options.path.should.equal('/v1/tests');
+				options.protocol.should.equal('https:');
+			});
+
+			it('HEAD should properly parse string passed to request methods', async () => {
+				nock('https://test.api.io')
+					.head('/v1/tests')
+					.reply(HTTP_STATUS_CODES.SUCCESS, { parsed : true });
+
+				let
+					req = new Request(),
+					res;
+
+				let options;
+
+				req.on('request', (state) => (options = state.options));
+
+				res = await req.head('https://test.api.io/v1/tests');
+
+				should.exist(options);
+				should.exist(options.hostname);
+				should.exist(options.path);
+				should.exist(options.protocol);
+
+				options.hostname.should.equal('test.api.io');
+				options.path.should.equal('/v1/tests');
+				options.protocol.should.equal('https:');
+			});
+
+			it('PATCH should properly parse string passed to request methods', async () => {
+				nock('https://test.api.io')
+					.patch('/v1/tests')
+					.reply(HTTP_STATUS_CODES.SUCCESS, { parsed : true });
+
+				let
+					req = new Request(),
+					res;
+
+				let options;
+
+				req.on('request', (state) => (options = state.options));
+
+				res = await req.patch('https://test.api.io/v1/tests');
+
+				should.exist(res);
+				should.exist(res.parsed);
+				res.parsed.should.equal(true);
+				should.exist(options);
+				should.exist(options.hostname);
+				should.exist(options.path);
+				should.exist(options.protocol);
+
+				options.hostname.should.equal('test.api.io');
+				options.path.should.equal('/v1/tests');
+				options.protocol.should.equal('https:');
+			});
+
+			it('POST should properly parse string passed to request methods', async () => {
+				nock('https://test.api.io')
+					.post('/v1/tests')
+					.reply(HTTP_STATUS_CODES.SUCCESS, { parsed : true });
+
+				let
+					req = new Request(),
+					res;
+
+				let options;
+
+				req.on('request', (state) => (options = state.options));
+
+				res = await req.post('https://test.api.io/v1/tests');
+
+				should.exist(res);
+				should.exist(res.parsed);
+				res.parsed.should.equal(true);
+				should.exist(options);
+				should.exist(options.hostname);
+				should.exist(options.path);
+				should.exist(options.protocol);
+
+				options.hostname.should.equal('test.api.io');
+				options.path.should.equal('/v1/tests');
+				options.protocol.should.equal('https:');
+			});
+
+			it('PUT should properly parse string passed to request methods', async () => {
+				nock('https://test.api.io')
+					.put('/v1/tests')
+					.reply(HTTP_STATUS_CODES.SUCCESS, { parsed : true });
+
+				let
+					req = new Request(),
+					res;
+
+				let options;
+
+				req.on('request', (state) => (options = state.options));
+
+				res = await req.put('https://test.api.io/v1/tests');
+
+				should.exist(res);
+				should.exist(res.parsed);
+				res.parsed.should.equal(true);
+				should.exist(options);
+				should.exist(options.hostname);
+				should.exist(options.path);
+				should.exist(options.protocol);
+
+				options.hostname.should.equal('test.api.io');
+				options.path.should.equal('/v1/tests');
+				options.protocol.should.equal('https:');
+			});
+		});
+
 		// redirects
 		describe('following redirects', () => {
 			it('should surface error on redirect without location header', async () => {
@@ -313,6 +481,9 @@ describe('req-lib', () => {
 		});
 
 		// JSON parsing
+		describe('should properly parse JSON', () => {
+
+		});
 
 		// non-JSON text response
 

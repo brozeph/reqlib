@@ -65,6 +65,14 @@ function coalesce (...args) {
 	return args.filter((value) => !isEmpty(value))[0];
 }
 
+function ensureOptions (value) {
+	if (!isObject(value) && typeof value === 'string') {
+		return url.parse(value);
+	}
+
+	return value;
+}
+
 function headerExists (headers, name) {
 	return !isEmpty(headers[name]) || !isEmpty(headers[name.toLowerCase()]);
 }
@@ -466,36 +474,42 @@ class Request extends events.EventEmitter {
 
 	// delete
 	async delete (options = {}, callback) {
+		options = ensureOptions(options);
 		options.method = 'DELETE';
 		return await this.call(options, callback);
 	}
 
 	// get
 	async get (options = {}, callback) {
+		options = ensureOptions(options);
 		options.method = 'GET';
 		return await this.call(options, callback);
 	}
 
 	// head
 	async head (options = {}, callback) {
+		options = ensureOptions(options);
 		options.method = 'HEAD';
 		return await this.call(options, callback);
 	}
 
 	// patch
 	async patch (options = {}, data, callback) {
+		options = ensureOptions(options);
 		options.method = 'PATCH';
 		return await this.call(options, data, callback);
 	}
 
 	// post
 	async post (options = {}, data, callback) {
+		options = ensureOptions(options);
 		options.method = 'POST';
 		return await this.call(options, data, callback);
 	}
 
 	// put
 	async put (options = {}, data, callback) {
+		options = ensureOptions(options);
 		options.method = 'PUT';
 		return await this.call(options, data, callback);
 	}

@@ -45,8 +45,8 @@ const
 		'headers',
 		'host',
 		'hostname',
-		//'keepAlive', // custom
-		//'keepAliveMsecs', // custom
+		// 'keepAlive', // custom
+		// 'keepAliveMsecs', // custom
 		'localAddress',
 		'maxRedirectCount', // custom
 		'maxRetryCount', // custom
@@ -114,7 +114,7 @@ function mergeOptions (request, options = {}) {
 	// apply timeout
 	result.timeout = coalesce(
 		result.timeout,
-		DEFAULTS.TIMEOUT)
+		DEFAULTS.TIMEOUT);
 
 	// validate the query
 	if (!isEmpty(result.query)) {
@@ -151,7 +151,7 @@ function parseUrlPattern (urlPattern) {
 	// determine parameters within the URL (if applicable)
 	parts.path
 		.match(RE_URL_PARAMETERS)
-		//.filter((match) => RE_URL_PARAMETERS.test(match))
+		// .filter((match) => RE_URL_PARAMETERS.test(match))
 		.forEach((match) => {
 			let parameters = match.split(RE_URL_PARAMETERS);
 			if (!parameters.length) {
@@ -192,7 +192,7 @@ function squareBracketNotation (query) {
 				}
 
 				if (!isObject(document[key])) {
-					resultQuery[serializedKey ? `${serializedKey}[${key}]` : key] = document[key]
+					resultQuery[serializedKey ? `${serializedKey}[${key}]` : key] = document[key];
 					return;
 				}
 
@@ -271,7 +271,6 @@ class Request extends events.EventEmitter {
 				let client = (RE_TLS_PROTOCOL.test(options.protocol) ? https : http).request(
 					options,
 					(response) => {
-
 						let
 							chunks = [],
 							contentType = coalesce(
@@ -426,7 +425,7 @@ class Request extends events.EventEmitter {
 						return setImmediate(clientRequest);
 					}
 
-					return reject(err)
+					return reject(err);
 				});
 
 				// apply request timeout

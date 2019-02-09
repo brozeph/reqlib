@@ -144,6 +144,7 @@
       - 2
       - "single"
     radix: 2
+    semi: 2
     sort-imports:
       - 2
       - ignoreCase: true
@@ -159,6 +160,7 @@
     space-before-function-paren:
       - 2
       - "always"
+    spaced-comment: ["error", "always"]
     use-isnan: 2
     valid-jsdoc: 2
     valid-typeof: 2

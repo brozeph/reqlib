@@ -486,6 +486,8 @@ describe('req-lib', () => {
 		// non-JSON text response
 
 		// content stream response
+
+		// timeout
 	});
 
 	describe('Resource', () => {

@@ -65,6 +65,10 @@ function coalesce (...args) {
 	return args.filter((value) => !isEmpty(value))[0];
 }
 
+function headerExists (headers, name) {
+	return !isEmpty(headers[name]) || !isEmpty(headers[name.toLowerCase()]);
+}
+
 function isEmpty (value) {
 	return (value === null || [
 		typeof value === 'undefined',
@@ -251,12 +255,12 @@ class Request extends events.EventEmitter {
 			Buffer.byteLength(state.data);
 
 		// apply application/json header as default
-		if (!options.headers[HTTP_HEADERS.CONTENT_TYPE] && !options.headers[HTTP_HEADERS.CONTENT_TYPE.toLowerCase()]) {
+		if (!headerExists(options.headers, HTTP_HEADERS.CONTENT_TYPE)) {
 			options.headers[HTTP_HEADERS.CONTENT_TYPE] = 'application/json';
 		}
 
 		// apply keep-alive header when specified
-		if (options.keepAlive && !options.headers[HTTP_HEADERS.CONNECTION]) {
+		if (options.keepAlive && !headerExists(options.headers, HTTP_HEADERS.CONNECTION)) {
 			options.headers[HTTP_HEADERS.CONNECTION] = 'keep-alive';
 		}
 

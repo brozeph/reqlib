@@ -1,5 +1,7 @@
 # Simple Request Library
 
+[![Build Status](https://travis-ci.org/brozeph/reqlib.svg?branch=master)](https://travis-ci.org/brozeph/reqlib) [![Coverage Status](https://coveralls.io/repos/github/brozeph/reqlib/badge.svg)](https://coveralls.io/github/brozeph/reqlib)
+
 ## Request
 
 `new Request(options)`

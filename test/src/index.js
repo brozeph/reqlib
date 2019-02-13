@@ -1,6 +1,7 @@
 import { Request, Resource } from '../../src';
 import chai from 'chai';
 import nock from 'nock';
+import { Writable } from 'stream';
 
 const
 	HTTP_STATUS_CODES = {
@@ -479,8 +480,119 @@ describe('req-lib', () => {
 		});
 
 		// JSON parsing
-		describe('should properly parse JSON', () => {
+		describe('response parsing', () => {
+			it('should properly avoid parsing JSON based on header', async () => {
+				nock('https://test.api.io')
+					.get('/v1/tests')
+					.reply(
+						HTTP_STATUS_CODES.SUCCESS,
+						'{ "test" : true }',
+						{ 'Content-Type' : 'application/text' });
 
+				let
+					req = new Request(),
+					res = await req.get({
+						headers : {
+							'content-type': 'application/text'
+						},
+						hostname : 'test.api.io',
+						path : '/v1/tests',
+						protocol : 'https:'
+					});
+
+					should.exist(res);
+					res.should.be.an('string');
+			});
+
+			it('should properly parse JSON based on header', async () => {
+				nock('https://test.api.io')
+					.get('/v1/tests')
+					.reply(
+						HTTP_STATUS_CODES.SUCCESS,
+						'{ "test" : true }',
+						{ 'Content-Type' : 'application/json' });
+
+				let
+					req = new Request(),
+					res = await req.get({
+						headers : {
+							'content-type': 'application/text'
+						},
+						hostname : 'test.api.io',
+						path : '/v1/tests',
+						protocol : 'https:'
+					});
+
+				should.exist(res);
+				res.should.be.an('object');
+				should.exist(res.test);
+				res.test.should.equal(true);
+			});
+
+			it('should return response stream based on header', async () => {
+				nock('https://test.api.io')
+					.get('/v1/tests')
+					.reply(
+						HTTP_STATUS_CODES.SUCCESS,
+						new Writable(),
+						{ 'Content-Type' : 'application/binary' });
+
+				let
+					req = new Request(),
+					res = await req.get({
+						headers : {
+							'content-type': 'application/text'
+						},
+						hostname : 'test.api.io',
+						path : '/v1/tests',
+						protocol : 'https:'
+					});
+
+				should.exist(res);
+				res.should.be.an('object');
+				res.readable.should.equal(true);
+			});
+		});
+
+		// query handling
+		describe('query handling', () => {
+			it('should convert date types to valid ISO strings', async () => {
+				nock('https://test.api.io')
+					.get(/\/v1\/tests\?now\=[0-9a-zA-Z\.\:\%]*/g)
+					.reply(
+						HTTP_STATUS_CODES.SUCCESS,
+						'{ "test" : true }');
+
+				let
+					now = new Date(),
+					queryNow,
+					req = new Request(),
+					requestState;
+
+				req.on('request', (state) => {
+					requestState = state;
+				});
+
+				await req.get({
+					hostname : 'test.api.io',
+					path : '/v1/tests',
+					protocol : 'https:',
+					query : {
+						now
+					}
+				});
+
+				should.exist(requestState);
+				should.exist(requestState.options);
+				should.exist(requestState.options.query);
+				should.exist(requestState.options.query.now);
+				requestState.options.query.now.should.be.an('string');
+				queryNow = new Date(requestState.options.query.now);
+
+				// should be the same time, but not the same object
+				Number(queryNow).should.equal(Number(now));
+				queryNow.should.not.equal(now);
+			});
 		});
 
 		// non-JSON text response

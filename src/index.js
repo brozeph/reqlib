@@ -245,7 +245,7 @@ class Request extends events.EventEmitter {
 
 		// ensure default values for state
 		state.data = data || '';
-		state.redirects = state.redirects || 0;
+		state.redirects = state.redirects || [];
 		state.tries = state.tries || 1;
 
 		// serialize any provided data
@@ -317,7 +317,7 @@ class Request extends events.EventEmitter {
 
 						// determine if a redirect has been detected
 						if (redirect) {
-							if (isEmpty(state.headers[HTTP_HEADERS.LOCATION])) {
+							if (!headerExists(state.headers, HTTP_HEADERS.LOCATION)) {
 								let err = new Error('redirect requested with no location');
 								err.options = options;
 								err.state = state;
@@ -325,7 +325,7 @@ class Request extends events.EventEmitter {
 								return reject(err);
 							}
 
-							if (state.redirects >= options.maxRedirectCount) {
+							if (state.redirects.length >= options.maxRedirectCount) {
 								let err = new Error('maximum redirect limit exceeded');
 								err.options = options;
 								err.state = state;
@@ -333,12 +333,22 @@ class Request extends events.EventEmitter {
 								return reject(err);
 							}
 
-							// remap options and redirect to supplied URL
-							let redirectUrl = url.parse(state.headers[HTTP_HEADERS.LOCATION]);
+							// read location from headers
+							let redirectUrl = url.parse(coalesce(
+								response.headers[HTTP_HEADERS.LOCATION],
+								response.headers[HTTP_HEADERS.LOCATION.toLowerCase()]));
+
+							// set protocol when missing (i.e. location begins with '//' instead of protocol)
+							if (isEmpty(redirectUrl.protocol) && state.redirects.length) {
+								let previousRedirect = state.redirects[state.redirects.length - 1];
+								redirectUrl = url.parse([previousRedirect.protocol, redirectUrl.href].join(''));
+							}
+
+							// remap options for next request
 							Object.assign(options, redirectUrl);
 
 							// increment number of redirects (to avoid endless looping)
-							state.redirects ++;
+							state.redirects.push(redirectUrl);
 
 							// emit redirect event
 							self.emit(EVENTS.redirect, {

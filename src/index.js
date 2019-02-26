@@ -6,6 +6,12 @@ import url from 'url';
 
 const
 	DEFAULTS = {
+		BASE_TEN : 10,
+		FAILOVER_ERROR_CODES : [
+			'ECONNREFUSED',
+			'ECONNRESET',
+			'ENOTFOUND'
+		],
 		HTTP_ERROR_CODE_RETRY_THRESHHOLD : 500,
 		HTTP_ERROR_CODE_THRESHHOLD : 400,
 		MAX_REDIRECT_COUNT : 5,
@@ -36,6 +42,7 @@ const
 	RE_CHARSET = /\ charset\=(a-z\-0-9)*/i,
 	RE_CONTENT_TYPE_JSON = /json/i,
 	RE_CONTENT_TYPE_TEXT = /json|xml|yaml|html|text|jwt/i,
+	RE_ENDS_WITH_S = /s$/i,
 	RE_TLS_PROTOCOL = /^https\:?/i,
 	RE_URL_PARAMETERS = /(\/\:([a-z0-9\_\-\~\.]*))*/gi,
 	SUPPORTED_REQUEST_OPTIONS = [
@@ -45,6 +52,8 @@ const
 		'headers',
 		'host',
 		'hostname',
+		'hosts', // custom
+		'hostnames', // custom
 		// 'keepAlive', // custom
 		// 'keepAliveMsecs', // custom
 		'localAddress',
@@ -245,13 +254,12 @@ class Request extends events.EventEmitter {
 
 		// ensure default values for state
 		state.data = data || '';
+		state.failover = {
+			index : 0,
+			values : []
+		};
 		state.redirects = state.redirects || [];
 		state.tries = state.tries || 1;
-
-		// serialize any provided data
-		if (isObject(state.data)) {
-			state.data = JSON.stringify(state.data);
-		}
 
 		// ensure default values for all request options
 		options = mergeOptions(this, options);
@@ -262,24 +270,70 @@ class Request extends events.EventEmitter {
 			options.headers[HTTP_HEADERS.CONTENT_LENGTH] ||
 			Buffer.byteLength(state.data);
 
-		// apply application/json header as default
+		// check to see if content-type is specified
 		if (!headerExists(options.headers, HTTP_HEADERS.CONTENT_TYPE)) {
+			// apply application/json header as default (this is opinionated)
 			options.headers[HTTP_HEADERS.CONTENT_TYPE] = 'application/json';
+
+			// serialize data (if provided) as JSON
+			if (isObject(state.data)) {
+				state.data = JSON.stringify(state.data);
+			}
+		}
+
+		// setup failover if applicable
+		['host', 'hostname', 'hostnames', 'hosts'].forEach((field) => {
+			let key = RE_ENDS_WITH_S.test(field) ?
+				field.slice(0, -1) :
+				field;
+
+			// if the host or hostname field value is an Array
+			// map the values into the state.failover
+			if (Array.isArray(options[field])) {
+				state.failover.values = state.failover.values
+					.concat(options[field].map((value) => ({ key, value })));
+
+				// clear the failover settings from the options as it will be overridden
+				delete options[field];
+			}
+		});
+
+		// set the current default host/hostname if failover options are present
+		if (state.failover.values.length) {
+			options[state.failover.values[state.failover.index].key] =
+				state.failover.values[state.failover.index].value;
+		}
+
+		// correct for port in the hostname field...
+		if (!isEmpty(options.hostname)) {
+			let portIndex = options.hostname.indexOf(':');
+
+			if (portIndex > 0) {
+				// set port, host and hostname correctly
+				options.port = parseInt(
+					coalesce(options.port, options.hostname.substr(portIndex + 1)),
+					DEFAULTS.BASE_TEN);
+
+				options.host = options.hostname;
+				options.hostname = options.hostname.substr(0, portIndex);
+			}
 		}
 
 		// apply keep-alive header when specified
+		/*
 		if (options.keepAlive && !headerExists(options.headers, HTTP_HEADERS.CONNECTION)) {
 			options.headers[HTTP_HEADERS.CONNECTION] = 'keep-alive';
 		}
+		//*/
 
 		executeRequest = new Promise((resolve, reject) => {
-			// emit request event
-			self.emit(EVENTS.request, {
-				options,
-				state
-			});
-
 			let clientRequest = () => {
+				// emit request event
+				self.emit(EVENTS.request, {
+					options,
+					state
+				});
+
 				let client = (RE_TLS_PROTOCOL.test(options.protocol) ? https : http).request(
 					options,
 					(response) => {
@@ -339,9 +393,12 @@ class Request extends events.EventEmitter {
 								response.headers[HTTP_HEADERS.LOCATION.toLowerCase()]));
 
 							// set protocol when missing (i.e. location begins with '//' instead of protocol)
-							if (isEmpty(redirectUrl.protocol) && state.redirects.length) {
-								let previousRedirect = state.redirects[state.redirects.length - 1];
-								redirectUrl = url.parse([previousRedirect.protocol, redirectUrl.href].join(''));
+							if (isEmpty(redirectUrl.protocol)) {
+								let previousRequestProtocol = state.redirects.length ?
+									state.redirects[state.redirects.length - 1].protocol :
+									options.protocol;
+
+								redirectUrl = url.parse([previousRequestProtocol, redirectUrl.href].join(''));
 							}
 
 							// remap options for next request
@@ -441,6 +498,31 @@ class Request extends events.EventEmitter {
 					});
 
 				client.on(EVENTS.error, (err) => {
+					let failover = (
+						state.failover.values.length &&
+						err.code &&
+						DEFAULTS.FAILOVER_ERROR_CODES.indexOf(err.code) !== -1);
+
+					// check for failover
+					if (failover) {
+						state.tries += 1;
+						state.failover.index = (
+							state.failover.index === state.failover.values.length - 1 ?
+								0 :
+								state.failover.index + 1);
+
+						if (state.tries <= state.failover.values.length) {
+							// remove host and hostname from options to prevent conflict with prior request
+							delete options.hostname;
+							delete options.host;
+
+							options[state.failover.values[state.failover.index].key] =
+								state.failover.values[state.failover.index].value;
+
+							return setImmediate(clientRequest);
+						}
+					}
+
 					// retry if below retry count threshhold
 					if (state.tries <= options.maxRetryCount) {
 						state.tries += 1;

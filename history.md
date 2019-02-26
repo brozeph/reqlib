@@ -1,4 +1,8 @@
-# v1.0.3 - 02/21/2019
+# v1.0.4 - 02/26/2019
+
+* Updated dev dependency for nyc (security patch)
+
+# v1.0.3 - 02/26/2019
 
 * Added support for failover / multiple hosts in request
 

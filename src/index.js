@@ -265,11 +265,6 @@ class Request extends events.EventEmitter {
 		options = mergeOptions(this, options);
 		options.headers = options.headers || {};
 
-		// apply content length header
-		options.headers[HTTP_HEADERS.CONTENT_LENGTH] =
-			options.headers[HTTP_HEADERS.CONTENT_LENGTH] ||
-			Buffer.byteLength(state.data);
-
 		// check to see if content-type is specified
 		if (!headerExists(options.headers, HTTP_HEADERS.CONTENT_TYPE)) {
 			// apply application/json header as default (this is opinionated)
@@ -280,6 +275,16 @@ class Request extends events.EventEmitter {
 				state.data = JSON.stringify(state.data);
 			}
 		}
+
+		// ensure state data is
+		if (isObject(state.data) && state.data.toString) {
+			state.data = state.data.toString();
+		}
+
+		// apply content length header
+		options.headers[HTTP_HEADERS.CONTENT_LENGTH] =
+			options.headers[HTTP_HEADERS.CONTENT_LENGTH] ||
+			Buffer.byteLength(state.data);
 
 		// setup failover if applicable
 		['host', 'hostname', 'hostnames', 'hosts'].forEach((field) => {

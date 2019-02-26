@@ -342,9 +342,91 @@ describe('req-lib', () => {
 							}];
 					});
 
-					nock('https://test.api.io')
-						.get('/v1/redirected')
-						.reply(HTTP_STATUS_CODES.SUCCESS, { redirected : true });
+				nock('https://test.api.io')
+					.get('/v1/redirected')
+					.reply(HTTP_STATUS_CODES.SUCCESS, { redirected : true });
+
+				let
+					req = new Request(),
+					res = await req.get({
+						hostname : 'test.api.io',
+						path : '/v1/tests',
+						protocol : 'https:'
+					});
+
+				should.exist(res);
+				redirected.should.equal(true);
+				should.exist(res.redirected);
+				res.redirected.should.equal(redirected);
+			});
+
+			it('should parse protocol from previous request options if missing in location header', async () => {
+				let redirected = false;
+
+				nock('https://test.api.io')
+					.get('/v1/tests')
+					.reply((uri, requestBody) => {
+						redirected = true;
+						return [
+							HTTP_STATUS_CODES.REDIRECT_NEW_CODE_PERM,
+							requestBody,
+							{
+								// note missing protocol!
+								'Location': '//test.api.io/v1/redirected',
+								'X-Original-URI' : uri
+							}];
+					});
+
+				nock('https://test.api.io')
+					.get('/v1/redirected')
+					.reply(HTTP_STATUS_CODES.SUCCESS, { redirected : true });
+
+				let
+					req = new Request(),
+					res = await req.get({
+						hostname : 'test.api.io',
+						path : '/v1/tests',
+						protocol : 'https:'
+					});
+
+				should.exist(res);
+				redirected.should.equal(true);
+				should.exist(res.redirected);
+				res.redirected.should.equal(redirected);
+			});
+
+			it('should parse protocol from previous redirect if missing in location header', async () => {
+				let redirected = false;
+
+				nock('https://test.api.io')
+					.get('/v1/tests')
+					.reply((uri, requestBody) => {
+						return [
+							HTTP_STATUS_CODES.REDIRECT_NEW_CODE_PERM,
+							requestBody,
+							{
+								'Location': 'https://test.api.io/v1/redirectOne',
+								'X-Original-URI' : uri
+							}];
+					});
+
+				nock('https://test.api.io')
+					.get('/v1/redirectOne')
+					.reply((uri, requestBody) => {
+						redirected = true;
+						return [
+							HTTP_STATUS_CODES.REDIRECT_NEW_CODE_PERM,
+							requestBody,
+							{
+								// note: missing protocol below!
+								'Location': '//test.api.io/v1/redirectTwo',
+								'X-Original-URI' : uri
+							}];
+					});
+
+				nock('https://test.api.io')
+					.get('/v1/redirectTwo')
+					.reply(HTTP_STATUS_CODES.SUCCESS, { redirected : true });
 
 				let
 					req = new Request(),
@@ -375,9 +457,9 @@ describe('req-lib', () => {
 							}];
 					});
 
-					nock('https://test.api.io')
-						.get('/v1/redirected')
-						.reply(HTTP_STATUS_CODES.SUCCESS, { redirected : true });
+				nock('https://test.api.io')
+					.get('/v1/redirected')
+					.reply(HTTP_STATUS_CODES.SUCCESS, { redirected : true });
 
 				let req = new Request();
 

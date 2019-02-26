@@ -2,11 +2,9 @@
 
 [![Build Status](https://travis-ci.org/brozeph/reqlib.svg?branch=master)](https://travis-ci.org/brozeph/reqlib) [![Coverage Status](https://coveralls.io/repos/github/brozeph/reqlib/badge.svg)](https://coveralls.io/github/brozeph/reqlib)
 
-## Request
+## Request Constructor
 
 `new Request(options)`
-
-
 
 ```javascript
 import { Request } from 'reqlib';
@@ -29,16 +27,24 @@ const
 })();
 ```
 
-### delete
+#### options
 
-### get
+The Request object accepts all otions from the standard `http.request` (and `https.request`) object (see [Node v10.x Documentation](https://nodejs.org/dist/latest-v10.x/docs/api/http.html#http_http_request_options_callback)) in addition to a few additional convenient options.
 
-### head
 
-### patch
 
-### post
+## #delete
 
-### put
+## #get
 
-## Resource
+## #head
+
+## #patch
+
+## #post
+
+## #put
+
+## Resource Constructor
+
+__under construction__

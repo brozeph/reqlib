@@ -1,3 +1,5 @@
+/* eslint no-magic-numbers : 0 */
+
 import { Request, Resource } from '../../src';
 import chai from 'chai';
 import nock from 'nock';
@@ -232,6 +234,304 @@ describe('req-lib', () => {
 					options.protocol.should.equal('https:');
 
 					return done();
+				});
+			});
+		});
+
+		// failover
+		describe('host(name) failover', () => {
+			it('should failover when multiple hostnames are provided', async () => {
+				nock('https://test.api.io')
+					.get('/v1/tests')
+					.reply(HTTP_STATUS_CODES.SUCCESS, { failedover : true });
+
+				let
+					failedOverRequestStates = [],
+					req = new Request(),
+					res;
+
+				req.on('request', (context) => {
+					failedOverRequestStates.push(JSON.parse(JSON.stringify(context.state)));
+				});
+
+				res = await req.get({
+					hostname : [
+						'fail.api.io',
+						'error.api.io',
+						'test.api.io'
+					],
+					path : '/v1/tests',
+					protocol : 'https:'
+				});
+
+				should.exist(res);
+				should.exist(res.failedover);
+				res.failedover.should.equal(true);
+
+				should.exist(failedOverRequestStates);
+				failedOverRequestStates.length.should.equal(3);
+				failedOverRequestStates[0].tries.should.equal(1);
+				failedOverRequestStates[1].tries.should.equal(2);
+				failedOverRequestStates[2].tries.should.equal(3);
+			});
+
+			it('should failover when multiple hostnames are provided as hostnames', async () => {
+				nock('https://test.api.io')
+					.get('/v1/tests')
+					.reply(HTTP_STATUS_CODES.SUCCESS, { failedover : true });
+
+				let
+					failedOverRequestStates = [],
+					req = new Request(),
+					res;
+
+				req.on('request', (context) => {
+					failedOverRequestStates.push(JSON.parse(JSON.stringify(context.state)));
+				});
+
+				res = await req.get({
+					hostnames : [
+						'fail.api.io',
+						'error.api.io',
+						'test.api.io'
+					],
+					path : '/v1/tests',
+					protocol : 'https:'
+				});
+
+				should.exist(res);
+				should.exist(res.failedover);
+				res.failedover.should.equal(true);
+
+				should.exist(failedOverRequestStates);
+				failedOverRequestStates.length.should.equal(3);
+				failedOverRequestStates[0].tries.should.equal(1);
+				failedOverRequestStates[1].tries.should.equal(2);
+				failedOverRequestStates[2].tries.should.equal(3);
+			});
+
+			it('should failover when multiple hosts are provided', async () => {
+				nock('https://test.api.io')
+					.get('/v1/tests')
+					.reply(HTTP_STATUS_CODES.SUCCESS, { failedover : true });
+
+				let
+					failedOverRequestStates = [],
+					req = new Request(),
+					res;
+
+				req.on('request', (context) => {
+					failedOverRequestStates.push(JSON.parse(JSON.stringify(context.state)));
+				});
+
+				res = await req.get({
+					host : [
+						'fail.api.io',
+						'error.api.io',
+						'test.api.io'
+					],
+					path : '/v1/tests',
+					protocol : 'https:'
+				});
+
+				should.exist(res);
+				should.exist(res.failedover);
+				res.failedover.should.equal(true);
+
+				should.exist(failedOverRequestStates);
+				failedOverRequestStates.length.should.equal(3);
+				failedOverRequestStates[0].tries.should.equal(1);
+				failedOverRequestStates[1].tries.should.equal(2);
+				failedOverRequestStates[2].tries.should.equal(3);
+			});
+
+			it('should failover when multiple hosts are provided as hosts', async () => {
+				nock('https://test.api.io')
+					.get('/v1/tests')
+					.reply(HTTP_STATUS_CODES.SUCCESS, { failedover : true });
+
+				let
+					failedOverRequestStates = [],
+					req = new Request(),
+					res;
+
+				req.on('request', (context) => {
+					failedOverRequestStates.push(JSON.parse(JSON.stringify(context.state)));
+				});
+
+				res = await req.get({
+					hosts : [
+						'fail.api.io',
+						'error.api.io',
+						'test.api.io'
+					],
+					path : '/v1/tests',
+					protocol : 'https:'
+				});
+
+				should.exist(res);
+				should.exist(res.failedover);
+				res.failedover.should.equal(true);
+
+				should.exist(failedOverRequestStates);
+				failedOverRequestStates.length.should.equal(3);
+				failedOverRequestStates[0].tries.should.equal(1);
+				failedOverRequestStates[1].tries.should.equal(2);
+				failedOverRequestStates[2].tries.should.equal(3);
+			});
+
+			it('should error when failover tries all hostnames provided unsuccessfully', async () => {
+				let
+					err,
+					req = new Request();
+
+				await (async () => {
+					try {
+						await req.get({
+							hostname : [
+								'fail.api.io',
+								'error.api.io',
+								'nope.api.io'
+							],
+							path : '/v1/tests',
+							protocol : 'https:'
+						});
+					} catch (ex) {
+						err = ex;
+					}
+				})();
+
+				should.exist(err);
+				err.message.should.equal('getaddrinfo ENOTFOUND nope.api.io nope.api.io:443');
+			});
+		});
+
+		describe('ports within hostname', () => {
+			it('should properly handle ports in hostname field', async () => {
+				nock('https://test.api.io')
+					.get('/v1/tests')
+					.reply(HTTP_STATUS_CODES.SUCCESS, { corrected : true });
+
+				let
+					options,
+					req = new Request(),
+					res;
+
+				req.on('request', (context) => {
+					options = context.options;
+				});
+
+				res = await req.get({
+					hostname : 'test.api.io:443',
+					path : '/v1/tests',
+					protocol : 'https:'
+				});
+
+				should.exist(res);
+				should.exist(res.corrected);
+				res.corrected.should.equal(true);
+
+				should.exist(options);
+				should.exist(options.host);
+				options.host.should.equal('test.api.io:443');
+				should.exist(options.port);
+				options.port.should.equal(443);
+				should.exist(options.hostname);
+				options.hostname.should.equal('test.api.io');
+			});
+
+			it('should properly handle invalid ports in hostname field', async () => {
+				nock('https://test.api.io')
+					.get('/v1/tests')
+					.reply(HTTP_STATUS_CODES.SUCCESS, { corrected : true });
+
+				let
+					options,
+					req = new Request(),
+					res;
+
+				req.on('request', (context) => {
+					options = context.options;
+				});
+
+				res = await req.get({
+					hostname : 'test.api.io:notanumber',
+					path : '/v1/tests',
+					protocol : 'https:'
+				});
+
+				should.exist(res);
+				should.exist(res.corrected);
+				res.corrected.should.equal(true);
+
+				should.exist(options);
+				should.exist(options.host);
+				options.host.should.equal('test.api.io:443');
+				should.exist(options.port);
+				options.port.should.equal(443);
+				should.exist(options.hostname);
+				options.hostname.should.equal('test.api.io');
+			});
+
+			it('should properly handle port overrides in hostname field', async () => {
+				nock('https://test.api.io:3443')
+					.get('/v1/tests')
+					.reply(HTTP_STATUS_CODES.SUCCESS, { corrected : true });
+
+				let
+					options,
+					req = new Request(),
+					res;
+
+				req.on('request', (context) => {
+					options = context.options;
+				});
+
+				res = await req.get({
+					hostname : 'test.api.io:3443',
+					path : '/v1/tests',
+					protocol : 'https:'
+				});
+
+				should.exist(res);
+				should.exist(res.corrected);
+				res.corrected.should.equal(true);
+
+				should.exist(options);
+				should.exist(options.host);
+				options.host.should.equal('test.api.io:3443');
+				should.exist(options.port);
+				options.port.should.equal(3443);
+				should.exist(options.hostname);
+				options.hostname.should.equal('test.api.io');
+			});
+		});
+
+		// proxy
+		describe('proxy requirement', () => {
+			it('should surface error when proxy is required', async () => {
+				nock('https://test.api.io')
+					.get('/v1/tests')
+					.reply((uri, requestBody) => {
+						return [
+							HTTP_STATUS_CODES.PROXY_REQUIRED,
+							requestBody,
+							{
+								'X-Original-URI' : uri
+							}];
+					});
+
+				let req = new Request();
+
+				req.get({
+					hostname : 'test.api.io',
+					path : '/v1/tests',
+					protocol : 'https:'
+				}).then(() => {
+					throw new Error('should throw exception when proxy is required');
+				}).catch((ex) => {
+					should.exist(ex);
+					ex.message.should.equal('proxy required');
 				});
 			});
 		});
@@ -510,17 +810,23 @@ describe('req-lib', () => {
 			});
 
 			it('should event on retry', async () => {
-				let retryEvent;
+				let
+					retryEvent,
+					tries;
 
 				nock('https://test.api.io')
 					.get('/v1/retry')
 					.reply(HTTP_STATUS_CODES.SERVER_ERROR, { retry : true });
 
-					nock('https://test.api.io')
-						.get('/v1/retry')
-						.reply(HTTP_STATUS_CODES.SUCCESS, { retry : true });
+				nock('https://test.api.io')
+					.get('/v1/retry')
+					.reply(HTTP_STATUS_CODES.SUCCESS, { retry : true });
 
 				let req = new Request();
+
+				req.on('request', (state) => {
+					tries = state.state.tries;
+				});
 
 				req.on('retry', (state) => {
 					retryEvent = state;
@@ -532,6 +838,8 @@ describe('req-lib', () => {
 					protocol : 'https:'
 				});
 
+				should.exist(tries);
+				tries.should.equal(2);
 				should.exist(retryEvent);
 				should.exist(retryEvent.options);
 				should.exist(retryEvent.state);

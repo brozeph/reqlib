@@ -6,6 +6,7 @@ import url from 'url';
 
 const
 	DEFAULTS = {
+		BASE_TEN : 10,
 		FAILOVER_ERROR_CODES : [
 			'ECONNREFUSED',
 			'ECONNRESET',
@@ -41,7 +42,7 @@ const
 	RE_CHARSET = /\ charset\=(a-z\-0-9)*/i,
 	RE_CONTENT_TYPE_JSON = /json/i,
 	RE_CONTENT_TYPE_TEXT = /json|xml|yaml|html|text|jwt/i,
-	RE_ENDS_WITH_S = /$s/i,
+	RE_ENDS_WITH_S = /s$/i,
 	RE_TLS_PROTOCOL = /^https\:?/i,
 	RE_URL_PARAMETERS = /(\/\:([a-z0-9\_\-\~\.]*))*/gi,
 	SUPPORTED_REQUEST_OPTIONS = [
@@ -51,6 +52,8 @@ const
 		'headers',
 		'host',
 		'hostname',
+		'hosts', // custom
+		'hostnames', // custom
 		// 'keepAlive', // custom
 		// 'keepAliveMsecs', // custom
 		'localAddress',
@@ -252,7 +255,6 @@ class Request extends events.EventEmitter {
 		// ensure default values for state
 		state.data = data || '';
 		state.failover = {
-			count : 0,
 			index : 0,
 			values : []
 		};
@@ -302,25 +304,20 @@ class Request extends events.EventEmitter {
 				state.failover.values[state.failover.index].value;
 		}
 
-		// correct for port in the host/hostname
-		// TODO: rework this - host can have server:port, but hostname is just server
-		['host', 'hostname'].some((field) => {
-			let
-				fieldExists = !isEmpty(options[field]),
-				portIndex = 0;
+		// correct for port in the hostname field...
+		if (!isEmpty(options.hostname)) {
+			let portIndex = options.hostname.indexOf(':');
 
-			if (fieldExists) {
-				portIndex = options[field].indexOf(/\:/);
+			if (portIndex > 0) {
+				// set port, host and hostname correctly
+				options.port = parseInt(
+					coalesce(options.port, options.hostname.substr(portIndex + 1)),
+					DEFAULTS.BASE_TEN);
 
-				if (portIndex > 0) {
-					options.port = coalesce(options.port, options[field].substr(portIndex + 1));
-					options[field] = options[field].substr(0, portIndex);
-				}
+				options.host = options.hostname;
+				options.hostname = options.hostname.substr(0, portIndex);
 			}
-
-			return fieldExists;
-		});
-		//*/
+		}
 
 		// apply keep-alive header when specified
 		/*
@@ -330,13 +327,13 @@ class Request extends events.EventEmitter {
 		//*/
 
 		executeRequest = new Promise((resolve, reject) => {
-			// emit request event
-			self.emit(EVENTS.request, {
-				options,
-				state
-			});
-
 			let clientRequest = () => {
+				// emit request event
+				self.emit(EVENTS.request, {
+					options,
+					state
+				});
+
 				let client = (RE_TLS_PROTOCOL.test(options.protocol) ? https : http).request(
 					options,
 					(response) => {
@@ -496,9 +493,6 @@ class Request extends events.EventEmitter {
 								return reject(err);
 							}
 
-							// reset failover
-							state.failover.count = 0;
-
 							return resolve(body);
 						});
 					});
@@ -511,13 +505,17 @@ class Request extends events.EventEmitter {
 
 					// check for failover
 					if (failover) {
-						state.failover.count ++;
+						state.tries += 1;
 						state.failover.index = (
 							state.failover.index === state.failover.values.length - 1 ?
 								0 :
 								state.failover.index + 1);
 
-						if (state.failover.count <= state.failover.values.length) {
+						if (state.tries <= state.failover.values.length) {
+							// remove host and hostname from options to prevent conflict with prior request
+							delete options.hostname;
+							delete options.host;
+
 							options[state.failover.values[state.failover.index].key] =
 								state.failover.values[state.failover.index].value;
 

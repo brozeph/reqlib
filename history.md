@@ -1,3 +1,7 @@
+# v1.0.3 - 02/21/2019
+
+* Added support for failover / multiple hosts in request
+
 # v1.0.2 - 02/13/2019
 
 * Added more unit tests

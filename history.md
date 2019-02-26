@@ -1,6 +1,7 @@
 # v1.0.4 - 02/26/2019
 
 * Updated dev dependency for nyc (security patch)
+* Fixed issue that occurred when data passed for writing to the request stream was not properly serialized
 
 # v1.0.3 - 02/26/2019
 

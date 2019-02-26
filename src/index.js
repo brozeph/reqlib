@@ -634,11 +634,6 @@ class Request extends events.EventEmitter {
 			options = {};
 		}
 
-		if (typeof options === 'string' && isEmpty(data)) {
-			data = options;
-			options = {};
-		}
-
 		options = ensureOptions(options);
 		options.method = 'POST';
 		return await this.call(options, data, callback);
@@ -653,11 +648,6 @@ class Request extends events.EventEmitter {
 
 		if (typeof options === 'function' && isEmpty(callback)) {
 			callback = options;
-			options = {};
-		}
-
-		if (typeof options === 'string' && isEmpty(data)) {
-			data = options;
 			options = {};
 		}
 

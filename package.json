@@ -1,6 +1,6 @@
 {
   "name": "reqlib",
-  "version": "1.0.3",
+  "version": "1.0.4",
   "description": "A library to simplify REST API requests and to provide utilities for handling common REST API consumer scenarios ",
   "main": "dist",
   "scripts": {
@@ -50,7 +50,7 @@
     "gulp-sourcemaps": "^2.6.4",
     "mocha": "^5.2.0",
     "nock": "^10.0.6",
-    "nyc": "^13.1.0"
+    "nyc": "^13.3.0"
   },
   "nyc": {
     "all": true,

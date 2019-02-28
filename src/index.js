@@ -539,6 +539,11 @@ class Request extends events.EventEmitter {
 
 				// apply request timeout
 				if (options.timeout) {
+					// convert timeout to a number if provided as a string
+					if (typeof options.timeout === 'string') {
+						options.timeout = parseInt(options.timeout, DEFAULTS.BASE_TEN);
+					}
+
 					client.setTimeout(options.timeout, client.abort);
 				}
 

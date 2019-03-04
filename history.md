@@ -1,3 +1,7 @@
+# v1.0.5 - 02/28/2019
+
+* Added check for timeout option provided as a string
+
 # v1.0.4 - 02/26/2019
 
 * Updated dev dependency for nyc (security patch)

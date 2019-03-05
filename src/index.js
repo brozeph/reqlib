@@ -33,6 +33,7 @@ const
 	},
 	// reference: https://en.wikipedia.org/wiki/List_of_HTTP_status_codes#3xx_Redirection
 	HTTP_STATUS_CODES = {
+		NO_CONTENT : 204,
 		PROXY_REQUIRED : 305,
 		REDIRECT_CODE_PERM : 301,
 		REDIRECT_CODE_TEMP : 302,
@@ -459,9 +460,10 @@ class Request extends events.EventEmitter {
 								error = state.statusCode >= DEFAULTS.HTTP_ERROR_CODE_THRESHHOLD,
 								retry =
 									state.statusCode >= DEFAULTS.HTTP_ERROR_CODE_RETRY_THRESHHOLD &&
-									state.tries <= options.maxRetryCount;
+									state.tries <= options.maxRetryCount,
+								statusCode = response.statusCode;
 
-							if (json) {
+							if (json && statusCode !== HTTP_STATUS_CODES.NO_CONTENT && body.length) {
 								try {
 									body = JSON.parse(body);
 								} catch (ex) {
@@ -494,6 +496,7 @@ class Request extends events.EventEmitter {
 								err.body = body;
 								err.options = options;
 								err.state = state;
+								err.statusCode = statusCode;
 
 								return reject(err);
 							}

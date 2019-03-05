@@ -1,6 +1,6 @@
 {
   "name": "reqlib",
-  "version": "1.0.5",
+  "version": "1.0.6",
   "description": "A library to simplify REST API requests and to provide utilities for handling common REST API consumer scenarios ",
   "main": "dist",
   "scripts": {

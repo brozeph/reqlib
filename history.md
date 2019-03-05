@@ -1,3 +1,8 @@
+# v1.0.6 - 03/05/2019
+
+* Added statusCode property from response to error when available
+* Fixed issue where 204 (no content) or an empty body caused parsing to fail
+
 # v1.0.5 - 02/28/2019
 
 * Added check for timeout option provided as a string

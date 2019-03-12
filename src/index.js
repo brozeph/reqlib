@@ -239,6 +239,7 @@ class Request extends events.EventEmitter {
 	call (options, data, callback) {
 		let
 			executeRequest,
+			requestContentType,
 			self = this,
 			state = {};
 
@@ -267,25 +268,30 @@ class Request extends events.EventEmitter {
 		options.headers = options.headers || {};
 
 		// check to see if content-type is specified
-		if (!headerExists(options.headers, HTTP_HEADERS.CONTENT_TYPE)) {
+		requestContentType = coalesce(
+			options.headers[HTTP_HEADERS.CONTENT_TYPE],
+			options.headers[HTTP_HEADERS.CONTENT_TYPE.toLowerCase()]);
+
+		// default the content type if not provided...
+		if (!requestContentType) {
 			// apply application/json header as default (this is opinionated)
 			options.headers[HTTP_HEADERS.CONTENT_TYPE] = 'application/json';
-
-			// serialize data (if provided) as JSON
-			if (isObject(state.data)) {
-				state.data = JSON.stringify(state.data);
-			}
+			requestContentType = 'application/json';
 		}
 
-		// ensure state data is
-		if (isObject(state.data) && state.data.toString) {
-			state.data = state.data.toString();
+		// ensure serialization of data
+		if (RE_CONTENT_TYPE_JSON.test(requestContentType)) {
+			state.data = JSON.stringify(data);
+		} else if (data && data.toString && typeof data.toString === 'function') {
+			state.data = data.toString();
 		}
 
 		// apply content length header
-		options.headers[HTTP_HEADERS.CONTENT_LENGTH] =
-			options.headers[HTTP_HEADERS.CONTENT_LENGTH] ||
-			Buffer.byteLength(state.data);
+		if (typeof state.data === 'string') {
+			options.headers[HTTP_HEADERS.CONTENT_LENGTH] =
+				options.headers[HTTP_HEADERS.CONTENT_LENGTH] ||
+				Buffer.byteLength(state.data);
+		}
 
 		// setup failover if applicable
 		['host', 'hostname', 'hostnames', 'hosts'].forEach((field) => {
@@ -551,7 +557,7 @@ class Request extends events.EventEmitter {
 				}
 
 				// send data
-				if (state.data) {
+				if (state.data && (typeof state.data === 'string' || Buffer.isBuffer(state.data))) {
 					client.write(state.data);
 				}
 

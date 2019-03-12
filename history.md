@@ -1,3 +1,7 @@
+# v1.0.7 - 03/12/2019
+
+* Adjusted how content-length header is calculated and applied for JSON data
+
 # v1.0.6 - 03/05/2019
 
 * Added statusCode property from response to error when available

@@ -280,10 +280,14 @@ class Request extends events.EventEmitter {
 		}
 
 		// ensure serialization of data
-		if (RE_CONTENT_TYPE_JSON.test(requestContentType)) {
-			state.data = JSON.stringify(data);
-		} else if (data && data.toString && typeof data.toString === 'function') {
-			state.data = data.toString();
+		if (typeof state.data !== 'string' && !Buffer.isBuffer(state.data)) {
+			if (RE_CONTENT_TYPE_JSON.test(requestContentType)) {
+				state.data = JSON.stringify(data);
+			} else if (data && data.toString && typeof data.toString === 'function') {
+				state.data = data.toString();
+			}
+
+			// TODO: handle when state.data might not be a string or Buffer
 		}
 
 		// apply content length header
@@ -291,6 +295,12 @@ class Request extends events.EventEmitter {
 			options.headers[HTTP_HEADERS.CONTENT_LENGTH] =
 				options.headers[HTTP_HEADERS.CONTENT_LENGTH] ||
 				Buffer.byteLength(state.data);
+		}
+
+		if (Buffer.isBuffer(state.data)) {
+			options.headers[HTTP_HEADERS.CONTENT_LENGTH] =
+				options.headers[HTTP_HEADERS.CONTENT_LENGTH] ||
+				state.data.length;
 		}
 
 		// setup failover if applicable

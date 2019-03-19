@@ -1,3 +1,8 @@
+# v1.0.8 - 03/19/2019
+
+* Removed `prepublish` NPM script in favor of `prepare`
+* Added better handling around HTTP request body serialization
+
 # v1.0.7 - 03/12/2019
 
 * Adjusted how content-length header is calculated and applied for JSON data

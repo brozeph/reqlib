@@ -1,3 +1,8 @@
+# v1.0.9 - 06/23/2020
+
+* Added `proxy` field to options for web proxy support 
+* Fixed defect where hostnames provided with invalid port numbers were not corrected
+
 # v1.0.8 - 03/19/2019
 
 * Removed `prepublish` NPM script in favor of `prepare`

@@ -1,6 +1,7 @@
 import events from 'events';
 import http from 'http';
 import https from 'https';
+import path from 'path';
 import qs from 'querystring';
 import url from 'url';
 
@@ -14,6 +15,8 @@ const
 		],
 		HTTP_ERROR_CODE_RETRY_THRESHHOLD : 500,
 		HTTP_ERROR_CODE_THRESHHOLD : 400,
+		HTTP_PORT : 80,
+		HTTPS_PORT : 443,
 		MAX_REDIRECT_COUNT : 5,
 		MAX_RETRY_COUNT : 3,
 		TIMEOUT : 60000
@@ -29,6 +32,7 @@ const
 		CONNECTION : 'Connection',
 		CONTENT_LENGTH : 'Content-Length',
 		CONTENT_TYPE : 'Content-Type',
+		HOST : 'Host',
 		LOCATION : 'Location'
 	},
 	// reference: https://en.wikipedia.org/wiki/List_of_HTTP_status_codes#3xx_Redirection
@@ -65,6 +69,7 @@ const
 		'pathname',
 		'port',
 		'protocol', // use to determine HTTPS or HTTP
+		'proxy', // added in v1.0.9
 		'query', // custom
 		'rejectUnauthorized',
 		'socketPath',
@@ -336,9 +341,47 @@ class Request extends events.EventEmitter {
 					coalesce(options.port, options.hostname.substr(portIndex + 1)),
 					DEFAULTS.BASE_TEN);
 
+				// correct port if invalid value is provided
+				if (isNaN(options.port)) {
+					options.port = RE_TLS_PROTOCOL.test(options.protocol) ? 
+						DEFAULTS.HTTPS_PORT : 
+						DEFAULTS.HTTPS_PORT;
+					
+					options.hostname = [
+						options.hostname.substr(0, portIndex), 
+						options.port].join(':');
+				}
+
 				options.host = options.hostname;
 				options.hostname = options.hostname.substr(0, portIndex);
 			}
+		}
+
+		// apply proxy server options when specified
+		if (!isEmpty(options.proxy)) {
+			let
+				host = options.host || options.hostname,
+				proxy = url.parse(options.proxy);
+			
+			// set Host header value to destination server for web proxy request
+			options.headers[HTTP_HEADERS.HOST] = host;
+
+			// ensure the path property includes the full destination URL (with port of provided)
+			if (options.path.indexOf(host) < 0) {
+				if (options.port && [DEFAULTS.HTTP_PORT, DEFAULTS.HTTPS_PORT].indexOf(options.port) < 0) {
+					host = [host, options.port].join(':');
+				}
+
+				options.path = [
+					options.secure ? 'https' : 'http',
+					path.join(host, options.path)].join('://');
+			}
+
+			// Set host, hostname, port and protocol for request to web proxy server
+			options.host = proxy.host;
+			options.hostname = proxy.hostname;
+			options.port = proxy.port;
+			options.protocol = proxy.protocol;
 		}
 
 		// apply keep-alive header when specified

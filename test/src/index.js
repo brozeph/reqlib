@@ -508,6 +508,73 @@ describe('req-lib', () => {
 		});
 
 		// proxy
+		describe('proxy support', () => {
+			it('should properly apply proxy when supplied as an option', async () => {
+				nock('http://proxy.server')
+					.get((uri) => uri.includes('http://test.api.io/v1/tests'))
+					.reply(HTTP_STATUS_CODES.SUCCESS, { proxy : true });
+
+				let 
+					options,
+					req = new Request(),
+					res;
+				
+				req.on('request', (context) => {
+					options = context.options;
+				});
+					
+				res = await req.get({
+						hostname : 'test.api.io',
+						path : '/v1/tests',
+						protocol : 'http:',
+						proxy : 'http://proxy.server'
+					});
+
+				should.exist(res);
+				should.exist(res.proxy);
+				res.proxy.should.equal(true);
+
+				should.exist(options);
+				should.exist(options.headers);
+				should.exist(options.headers['Host']);
+				options.headers['Host'].should.equal('test.api.io');
+			});
+
+			it('should properly apply proxy with port defined', async () => {
+				nock('http://proxy.server:8080')
+					.get((uri) => uri.includes('http://test.api.io/v1/tests'))
+					.reply(HTTP_STATUS_CODES.SUCCESS, { proxy : true });
+
+				let 
+					options,
+					req = new Request(),
+					res;
+				
+				req.on('request', (context) => {
+					options = context.options;
+				});
+					
+				res = await req.get({
+						hostname : 'test.api.io',
+						path : '/v1/tests',
+						protocol : 'http:',
+						proxy : 'http://proxy.server:8080'
+					});
+
+				should.exist(res);
+				should.exist(res.proxy);
+				res.proxy.should.equal(true);
+
+				should.exist(options);
+				should.exist(options.headers);
+				should.exist(options.headers['Host']);
+				options.headers['Host'].should.equal('test.api.io');
+				should.exist(options.port);
+				options.port.should.equal('8080');
+			});
+		});
+		
+		// proxy requirement
 		describe('proxy requirement', () => {
 			it('should surface error when proxy is required', async () => {
 				nock('https://test.api.io')

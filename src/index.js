@@ -377,8 +377,9 @@ class Request extends events.EventEmitter {
 					path.join(host, options.path)].join('://');
 			}
 
-			// Set host, port and protocol for request to web proxy server
+			// Set host, hostname, port and protocol for request to web proxy server
 			options.host = proxy.host;
+			options.hostname = proxy.hostname;
 			options.port = proxy.port;
 			options.protocol = proxy.protocol;
 		}

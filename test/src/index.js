@@ -402,7 +402,7 @@ describe('req-lib', () => {
 				})();
 
 				should.exist(err);
-				err.message.should.equal('getaddrinfo ENOTFOUND nope.api.io nope.api.io:443');
+				err.message.should.contain('getaddrinfo ENOTFOUND nope.api.io');
 			});
 		});
 
@@ -948,7 +948,7 @@ describe('req-lib', () => {
 		describe('query handling', () => {
 			it('should convert date types to valid ISO strings', async () => {
 				nock('https://test.api.io')
-					.get(/\/v1\/tests\?now\=[0-9a-zA-Z\.\:\%]*/g)
+					.get((uri) => uri.includes('/v1\/tests'))
 					.reply(
 						HTTP_STATUS_CODES.SUCCESS,
 						'{ "test" : true }');

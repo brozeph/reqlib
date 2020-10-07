@@ -514,15 +514,15 @@ describe('req-lib', () => {
 					.get((uri) => uri.includes('http://test.api.io/v1/tests'))
 					.reply(HTTP_STATUS_CODES.SUCCESS, { proxy : true });
 
-				let 
+				let
 					options,
 					req = new Request(),
 					res;
-				
+
 				req.on('request', (context) => {
 					options = context.options;
 				});
-					
+
 				res = await req.get({
 						hostname : 'test.api.io',
 						path : '/v1/tests',
@@ -545,15 +545,15 @@ describe('req-lib', () => {
 					.get((uri) => uri.includes('http://test.api.io/v1/tests'))
 					.reply(HTTP_STATUS_CODES.SUCCESS, { proxy : true });
 
-				let 
+				let
 					options,
 					req = new Request(),
 					res;
-				
+
 				req.on('request', (context) => {
 					options = context.options;
 				});
-					
+
 				res = await req.get({
 						hostname : 'test.api.io',
 						path : '/v1/tests',
@@ -573,7 +573,7 @@ describe('req-lib', () => {
 				options.port.should.equal('8080');
 			});
 		});
-		
+
 		// proxy requirement
 		describe('proxy requirement', () => {
 			it('should surface error when proxy is required', async () => {
@@ -658,7 +658,6 @@ describe('req-lib', () => {
 					throw new Error('should throw exception when max redirect limit is exceeded');
 				}).catch((ex) => {
 					should.exist(ex);
-					ex.message.should.equal('maximum redirect limit exceeded');
 				});
 			});
 

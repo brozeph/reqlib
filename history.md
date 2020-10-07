@@ -1,6 +1,10 @@
+# v1.0.10 - 10/07/2020
+
+* Updated dependencies
+
 # v1.0.9 - 06/23/2020
 
-* Added `proxy` field to options for web proxy support 
+* Added `proxy` field to options for web proxy support
 * Fixed defect where hostnames provided with invalid port numbers were not corrected
 
 # v1.0.8 - 03/19/2019

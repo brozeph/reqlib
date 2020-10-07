@@ -31,8 +31,6 @@ const
 
 The Request object accepts all otions from the standard `http.request` (and `https.request`) object (see [Node v10.x Documentation](https://nodejs.org/dist/latest-v10.x/docs/api/http.html#http_http_request_options_callback)) in addition to a few additional convenient options.
 
-
-
 ## #delete
 
 ## #get

@@ -1,12 +1,14 @@
+/* eslint no-console : 0 */
 /* eslint no-magic-numbers : 0 */
+/* eslint sort-imports : 0 */
 
-import { Request, Resource } from '../../src';
-import chai from 'chai';
+import 'chai/register-should';
 import nock from 'nock';
+import { Request, Resource } from '../../src';
 import { Writable } from 'stream';
+import { URL } from 'url';
 
-const
-	HTTP_STATUS_CODES = {
+const HTTP_STATUS_CODES = {
 		CONFLICT : 413,
 		PROXY_REQUIRED : 305,
 		REDIRECT_CODE_PERM : 301,
@@ -15,8 +17,7 @@ const
 		REDIRECT_NEW_CODE_TEMP : 307,
 		SERVER_ERROR : 500,
 		SUCCESS : 200
-	},
-	should = chai.should();
+	};
 
 describe('req-lib', () => {
 	describe('Request', () => {
@@ -26,6 +27,13 @@ describe('req-lib', () => {
 
 				should.exist(req);
 				should.not.exist(req.options);
+			});
+
+			it('should allow string as argument', async () => {
+				let req = new Request('https://github.com');
+
+				should.exist(req);
+				should.exist(req.options);
 			});
 		});
 
@@ -932,6 +940,55 @@ describe('req-lib', () => {
 					should.exist(ex);
 					ex.message.should.contain('HTTP error received');
 				});
+			});
+		});
+
+		// path and pathname
+		describe('when an URL instance or string is passed to constructor', () => {
+			it('should properly handle new URL in constructor', async () => {
+				nock('https://test.api.io')
+					.get('/v1/tests')
+					.reply(HTTP_STATUS_CODES.SUCCESS, { corrected : true });
+
+				let
+					options,
+					req = new Request(new URL('https://test.api.io/v1/tests')),
+					res;
+
+				req.on('request', (context) => {
+					options = context.options;
+				});
+
+				res = await req.get();
+
+				should.exist(res);
+
+				should.exist(options);
+				should.exist(options.path);
+				options.path.should.equal(options.pathname);
+			});
+
+			it('should properly handle string in constructor', async () => {
+				nock('https://test.api.io')
+					.get('/v1/tests')
+					.reply(HTTP_STATUS_CODES.SUCCESS, { corrected : true });
+
+				let
+					options,
+					req = new Request('https://test.api.io/v1/tests'),
+					res;
+
+				req.on('request', (context) => {
+					options = context.options;
+				});
+
+				res = await req.get();
+
+				should.exist(res);
+
+				should.exist(options);
+				should.exist(options.path);
+				options.path.should.equal(options.pathname);
 			});
 		});
 

@@ -238,7 +238,12 @@ function squareBracketNotation (query) {
 class Request extends events.EventEmitter {
 	constructor (options) {
 		super();
-		this.options = options;
+
+		if (typeof options === 'string') {
+			this.options = new url.URL(options);
+		} else {
+			this.options = options;
+		}
 	}
 
 	call (options, data, callback) {
@@ -343,12 +348,12 @@ class Request extends events.EventEmitter {
 
 				// correct port if invalid value is provided
 				if (isNaN(options.port)) {
-					options.port = RE_TLS_PROTOCOL.test(options.protocol) ? 
-						DEFAULTS.HTTPS_PORT : 
+					options.port = RE_TLS_PROTOCOL.test(options.protocol) ?
+						DEFAULTS.HTTPS_PORT :
 						DEFAULTS.HTTPS_PORT;
-					
+
 					options.hostname = [
-						options.hostname.substr(0, portIndex), 
+						options.hostname.substr(0, portIndex),
 						options.port].join(':');
 				}
 
@@ -362,7 +367,7 @@ class Request extends events.EventEmitter {
 			let
 				host = options.host || options.hostname,
 				proxy = url.parse(options.proxy);
-			
+
 			// set Host header value to destination server for web proxy request
 			options.headers[HTTP_HEADERS.HOST] = host;
 
@@ -390,6 +395,9 @@ class Request extends events.EventEmitter {
 			options.headers[HTTP_HEADERS.CONNECTION] = 'keep-alive';
 		}
 		//*/
+
+		// ensure path is set
+		options.path = options.path || options.pathname;
 
 		executeRequest = new Promise((resolve, reject) => {
 			let clientRequest = () => {

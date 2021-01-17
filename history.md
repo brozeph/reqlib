@@ -1,3 +1,9 @@
+# v1.0.12 - 01/17/2021
+
+* Updated dependencies
+* Fixed issue where using `new URL("uri")` in `Request` constructor did not properly work
+* Added support for constructing a new `Request` with a String URI
+
 # v1.0.11 - 11/11/2020
 
 * Updated dependencies

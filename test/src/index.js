@@ -82,6 +82,8 @@ describe('req-lib', () => {
 
 		// ensure options
 		describe('ensureOptions', () => {
+			beforeEach(() => nock.cleanAll());
+
 			it('DELETE should properly parse string passed to request methods', async () => {
 				nock('https://test.api.io')
 					.delete('/v1/tests')
@@ -248,6 +250,8 @@ describe('req-lib', () => {
 
 		// failover
 		describe('host(name) failover', () => {
+			beforeEach(() => nock.cleanAll());
+
 			it('should failover when multiple hostnames are provided', async () => {
 				nock('https://test.api.io')
 					.get('/v1/tests')
@@ -415,6 +419,8 @@ describe('req-lib', () => {
 		});
 
 		describe('ports within hostname', () => {
+			beforeEach(() => nock.cleanAll());
+
 			it('should properly handle ports in hostname field', async () => {
 				nock('https://test.api.io')
 					.get('/v1/tests')
@@ -517,6 +523,8 @@ describe('req-lib', () => {
 
 		// proxy
 		describe('proxy support', () => {
+			beforeEach(() => nock.cleanAll());
+
 			it('should properly apply proxy when supplied as an option', async () => {
 				nock('http://proxy.server')
 					.get((uri) => uri.includes('http://test.api.io/v1/tests'))
@@ -584,6 +592,8 @@ describe('req-lib', () => {
 
 		// proxy requirement
 		describe('proxy requirement', () => {
+			beforeEach(() => nock.cleanAll());
+
 			it('should surface error when proxy is required', async () => {
 				nock('https://test.api.io')
 					.get('/v1/tests')
@@ -613,6 +623,8 @@ describe('req-lib', () => {
 
 		// redirects
 		describe('following redirects', () => {
+			beforeEach(() => nock.cleanAll());
+
 			it('should surface error on redirect without location header', async () => {
 				nock('https://test.api.io')
 					.get('/v1/tests')
@@ -855,6 +867,8 @@ describe('req-lib', () => {
 
 		// retries
 		describe('attempting retries', () => {
+			beforeEach(() => nock.cleanAll());
+
 			it('should not retry on client error', async () => {
 				let retryEvent;
 
@@ -945,6 +959,8 @@ describe('req-lib', () => {
 
 		// path and pathname
 		describe('when an URL instance or string is passed to constructor', () => {
+			beforeEach(() => nock.cleanAll());
+
 			it('should properly handle new URL in constructor', async () => {
 				nock('https://test.api.io')
 					.get('/v1/tests')
@@ -994,6 +1010,8 @@ describe('req-lib', () => {
 
 		// JSON parsing
 		describe('response parsing', () => {
+			beforeEach(() => nock.cleanAll());
+
 			it('should properly avoid parsing JSON based on header', async () => {
 				nock('https://test.api.io')
 					.get('/v1/tests')

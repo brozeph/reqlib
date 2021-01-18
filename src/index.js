@@ -3,7 +3,7 @@ import http from 'http';
 import https from 'https';
 import path from 'path';
 import qs from 'querystring';
-import url from 'url';
+import { URL } from 'url';
 
 const
 	DEFAULTS = {
@@ -48,6 +48,7 @@ const
 	RE_CONTENT_TYPE_JSON = /json/i,
 	RE_CONTENT_TYPE_TEXT = /json|xml|yaml|html|text|jwt/i,
 	RE_ENDS_WITH_S = /s$/i,
+	RE_PROTOCOL_SEPARATOR = /\/{2}/,
 	RE_TLS_PROTOCOL = /^https\:?/i,
 	RE_URL_PARAMETERS = /(\/\:([a-z0-9\_\-\~\.]*))*/gi,
 	SUPPORTED_REQUEST_OPTIONS = [
@@ -82,7 +83,7 @@ function coalesce (...args) {
 
 function ensureOptions (value) {
 	if (!isObject(value) && typeof value === 'string') {
-		return url.parse(value);
+		return new URL(value);
 	}
 
 	return value;
@@ -173,7 +174,7 @@ function mergeOptions (request, options = {}) {
 }
 
 function parseUrlPattern (urlPattern) {
-	let parts = url.parse(urlPattern);
+	let parts = new URL(urlPattern);
 
 	// determine parameters within the URL (if applicable)
 	parts.path
@@ -240,7 +241,7 @@ class Request extends events.EventEmitter {
 		super();
 
 		if (typeof options === 'string') {
-			this.options = new url.URL(options);
+			this.options = new URL(options);
 		} else {
 			this.options = options;
 		}
@@ -366,7 +367,7 @@ class Request extends events.EventEmitter {
 		if (!isEmpty(options.proxy)) {
 			let
 				host = options.host || options.hostname,
-				proxy = url.parse(options.proxy);
+				proxy = new URL(options.proxy);
 
 			// set Host header value to destination server for web proxy request
 			options.headers[HTTP_HEADERS.HOST] = host;
@@ -460,19 +461,26 @@ class Request extends events.EventEmitter {
 								return reject(err);
 							}
 
-							// read location from headers
-							let redirectUrl = url.parse(coalesce(
-								response.headers[HTTP_HEADERS.LOCATION],
-								response.headers[HTTP_HEADERS.LOCATION.toLowerCase()]));
+							let
+								location = coalesce(
+									response.headers[HTTP_HEADERS.LOCATION],
+									response.headers[HTTP_HEADERS.LOCATION.toLowerCase()]),
+								redirectUrl;
 
 							// set protocol when missing (i.e. location begins with '//' instead of protocol)
-							if (isEmpty(redirectUrl.protocol)) {
+							if (!location.search(RE_PROTOCOL_SEPARATOR)) {
 								let previousRequestProtocol = state.redirects.length ?
 									state.redirects[state.redirects.length - 1].protocol :
 									options.protocol;
 
-								redirectUrl = url.parse([previousRequestProtocol, redirectUrl.href].join(''));
+								location = [previousRequestProtocol, location].join('');
 							}
+
+							// read location from headers
+							redirectUrl = new URL(location);
+
+							// ensure path is set
+							redirectUrl.path = redirectUrl.path || redirectUrl.pathname;
 
 							// remap options for next request
 							Object.assign(options, redirectUrl);

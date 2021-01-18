@@ -3,6 +3,7 @@
 * Updated dependencies
 * Fixed issue where using `new URL("uri")` in `Request` constructor did not properly work
 * Added support for constructing a new `Request` with a String URI
+* Removed all uses of the deprected `url.parse()` method
 
 # v1.0.11 - 11/11/2020
 
